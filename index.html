@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI提示词优化</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	
+	<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        neutral: {
+                            100: '#F3F4F6',
+                            200: '#E5E7EB',
+                            300: '#D1D5DB',
+                            400: '#9CA3AF',
+                            500: '#6B7280',
+                            600: '#4B5563',
+                            700: '#374151',
+                            800: '#1F2937',
+                            900: '#111827'
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 25px -5px rgba(0, 0, 0, 0.05)',
+                        'hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                },
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .transition-smooth {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .card-hover {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+            }
+            .gradient-bg {
+                background: linear-gradient(135deg, #165DFF 0%, #0040C1 100%);
+            }
+            .dimension-card {
+                @apply bg-white rounded-xl p-6 shadow-soft card-hover mb-6;
+            }
+            .dimension-title {
+                @apply text-xl font-semibold mb-3 flex items-center;
+            }
+            .dimension-icon {
+                @apply w-8 h-8 flex items-center justify-center rounded-full mr-3;
+            }
+			.loading-text {
+			            background: linear-gradient(90deg, #165DFF 0%, #36D399 50%, #165DFF 100%);
+			            background-size: 100% auto;
+			            animation: gradient 2s linear infinite;
+			            -webkit-background-clip: text;
+			            background-clip: text;
+			            color: transparent;
+			        }
+        }
+		
+		body {
+		    background-image: url('https://img.shetu66.com/2023/06/29/1688021714672054.png');
+		    background-size: cover;      /* 覆盖整个区域 */
+		    background-position: center; /* 居中显示 */
+		    background-repeat: no-repeat;/* 不重复 */
+		    background-attachment: fixed;/* 固定背景（可选） */
+		}
+    </style>
+</head>
+<body class="font-inter bg-neutral-100 text-neutral-800 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-300">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">          
+            <button class="md:hidden text-neutral-700 text-xl">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <!-- 介绍卡片 -->
+        <section class="bg-white rounded-2xl shadow-soft p-6 md:p-8 mb-8 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -mr-20 -mt-20"></div>
+            <div class="absolute bottom-0 left-0 w-20 h-20 bg-primary/5 rounded-full -ml-10 -mb-10"></div>
+            
+            <div class="relative">
+                <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral-800 mb-4">优化您的AI提示词，<span class="text-primary">提升获取效果</span></h2>
+                <p class="text-neutral-600 mb-6 max-w-3xl text-lg">利用目标、对象、场景、约束四个维度，生成更精准的AI提示词，以便获取更符合的AI回答。</p>
+					<p class="text-neutral-600 mb-4">累计访问量：</p> <a href="https://info.flagcounter.com/yccr"><img src="https://s01.flagcounter.com/mini/yccr/bg_50FF4A/txt_FF170F/border_CCCCCC/flags_0/" alt="Flag Counter" border="0"></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 输入和输出区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 左侧：原始提示词输入 -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-soft p-6 h-full flex flex-col">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fa-solid fa-pencil text-primary mr-2"></i>
+                        输入原始提示词
+                    </h3>
+                    <p class="text-neutral-600 mb-4">输入您想优化的AI提示词，描述您希望AI完成的任务。</p>
+                    
+                    <textarea 
+                        id="originalPrompt" 
+                        class="flex-grow w-full p-4 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-smooth resize-none" 
+                        rows="4" 
+                        placeholder="例如：请帮我设计一节关于光合作用的课程..."></textarea>
+                    
+                    <button 
+                        id="optimizeBtn" 
+                        class="mt-6 w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-smooth flex items-center justify-center text-lg font-medium shadow-md hover:shadow-lg">
+                        <i class="fa-solid fa-magic mr-2"></i>
+                        优化提示词
+                    </button>
+                </div>
+            </div>
+
+            <!-- 中间：四个维度的优化 -->
+            <div class="lg:col-span-1">
+                <div class="h-full flex flex-col">
+                    <!-- 目标维度 -->
+                    <div class="dimension-card">
+                        <div class="dimension-title">
+                            <div class="dimension-icon bg-primary/10 text-primary">
+                                <i class="fa-solid fa-bullseye"></i>
+                            </div>
+                            <span>目标</span>
+                        </div>
+                        <p class="text-neutral-600 mb-3">明确您希望通过AI实现的具体教学目标</p>
+                        <textarea 
+                            id="dimensionGoal" 
+                            class="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-smooth resize-none" 
+                            rows="2" 
+                            placeholder="例如：帮助学生理解光合作用的基本原理"></textarea>
+                    </div>
+
+                    <!-- 对象维度 -->
+                    <div class="dimension-card">
+                        <div class="dimension-title">
+                            <div class="dimension-icon bg-primary/10 text-primary">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <span>对象</span>
+                        </div>
+                        <p class="text-neutral-600 mb-3">描述您的学生群体特点和知识水平</p>
+                        <textarea 
+                            id="dimensionAudience" 
+                            class="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-smooth resize-none" 
+                            rows="2" 
+                            placeholder="例如：初中二年级学生，已有基础生物学知识"></textarea>
+                    </div>
+
+                    <!-- 场景维度 -->
+                    <div class="dimension-card">
+                        <div class="dimension-title">
+                            <div class="dimension-icon bg-primary/10 text-primary">
+                                <i class="fa-solid fa-map-marker"></i>
+                            </div>
+                            <span>场景</span>
+                        </div>
+                        <p class="text-neutral-600 mb-3">说明提示词将在何种教学场景中使用</p>
+                        <textarea 
+                            id="dimensionContext" 
+                            class="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-smooth resize-none" 
+                            rows="2" 
+                            placeholder="例如：课堂导入环节，时长10分钟"></textarea>
+                    </div>
+
+                    <!-- 约束维度 -->
+                    <div class="dimension-card">
+                        <div class="dimension-title">
+                            <div class="dimension-icon bg-primary/10 text-primary">
+                                <i class="fa-solid fa-ban"></i>
+                            </div>
+                            <span>约束</span>
+                        </div>
+                        <p class="text-neutral-600 mb-3">添加您希望AI回答遵循的限制或要求</p>
+                        <textarea 
+                            id="dimensionConstraints" 
+                            class="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-smooth resize-none" 
+                            rows="2" 
+                            placeholder="例如：使用简单易懂的语言，避免复杂的科学术语"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：优化后的提示词 -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-soft p-6 h-full flex flex-col">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fa-solid fa-lightbulb text-primary mr-2"></i>
+                        优化后的提示词
+                    </h3>
+                    <p class="text-neutral-600 mb-4">基于四个维度生成的优化提示词，点击下方按钮复制使用。以下是更精准的提示词：</p>
+                    
+                    <div id="optimizedPrompt" class="flex-grow w-full p-4 bg-neutral-50 border border-neutral-200 rounded-lg overflow-auto">
+                        <p class="text-neutral-500 italic">优化后的提示词将显示在这里...</p>
+                    </div>
+                    
+                    <div class="mt-6 flex space-x-3">
+                        <button 
+                            id="copyBtn" 
+                            class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-smooth flex items-center justify-center font-medium shadow-md hover:shadow-lg">
+                            <i class="fa-solid fa-copy mr-2"></i>
+                            复制提示词
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用示例部分 -->
+        <section class="mt-12">
+            <h3 class="text-2xl font-bold text-neutral-800 mb-6">使用示例</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
+                            <i class="fa-solid fa-book"></i>
+                        </div>
+                        <h4 class="font-semibold text-lg">语文教学</h4>
+                    </div>
+                    <p class="text-neutral-600 mb-4">原始提示词：<span class="font-medium">"设计一个古诗赏析课程"</span></p>
+                    <div class="p-3 bg-neutral-50 rounded-lg text-sm">
+                        <p class="font-medium text-primary mb-2">优化后：</p>
+                        <p>为初中一年级学生设计一个时长为45分钟的古诗赏析课程，帮助学生理解李白《静夜思》的意境和情感表达。课程应包括背景介绍、诗句解析、情感探讨等环节。请使用简单易懂的语言，结合图片和视频资源，设计互动问题引导学生思考，并提供课后练习建议。</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
+                            <i class="fa-solid fa-calculator"></i>
+                        </div>
+                        <h4 class="font-semibold text-lg">数学教学</h4>
+                    </div>
+                    <p class="text-neutral-600 mb-4">原始提示词：<span class="font-medium">"如何教学生解一元二次方程"</span></p>
+                    <div class="p-3 bg-neutral-50 rounded-lg text-sm">
+                        <p class="font-medium text-primary mb-2">优化后：</p>
+                        <p>为高中一年级学生设计一个60分钟的课程，教授解一元二次方程的方法。学生已掌握基本代数运算。课程需包括因式分解法、配方法和求根公式法的讲解和练习。请使用多媒体示例，设计逐步引导的解题步骤，提供10道不同难度的练习题及答案，并说明如何帮助学生理解判别式的意义和应用。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 成功提示弹窗 -->
+    <div id="successToast" class="fixed bottom-6 right-6 bg-secondary text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center">
+        <i class="fa-solid fa-check-circle mr-2"></i>
+        <span>复制成功！</span>
+    </div>
+	
+	<!-- 页脚 -->
+	<footer class="text-center py-4">
+	    <p class="text-gray-200">&copy; 20250519 AIEC  已接入大模型 </p>
+	</footer>
+
+    <script>
+		   // 禁用开发者工具
+		   setInterval(() => {
+		    if (window.outerWidth - window.innerWidth > 200 || 
+		        window.outerHeight - window.innerHeight > 200) {
+		        window.location.href = "about:blank";
+		    }
+		  }, 1000);
+		
+		  // 内容安全策略
+		  const nonce = crypto.randomUUID();
+		  document.querySelectorAll('script').forEach(script => {
+		  if (!script.nonce) script.nonce = nonce;
+		  });
+		
+                // 获取DOM元素
+                const originalPrompt = document.getElementById('originalPrompt');
+                const dimensionGoal = document.getElementById('dimensionGoal');
+                const dimensionAudience = document.getElementById('dimensionAudience');
+                const dimensionContext = document.getElementById('dimensionContext');
+                const dimensionConstraints = document.getElementById('dimensionConstraints');
+                const optimizedPrompt = document.getElementById('optimizedPrompt');
+                const optimizeBtn = document.getElementById('optimizeBtn');
+                const copyBtn = document.getElementById('copyBtn');
+                const regenerateBtn = document.getElementById('regenerateBtn');
+                const successToast = document.getElementById('successToast');
+                const header = document.querySelector('header');
+        
+                // 滚动时改变导航栏样式
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 10) {
+                        header.classList.add('shadow-md');
+                        header.classList.remove('shadow-sm');
+                    } else {
+                        header.classList.remove('shadow-md');
+                        header.classList.add('shadow-sm');
+                    }
+                });
+        
+                // 豆包API配置
+                const DOUBAO_API_KEY = '6681eb67-33f9-4f43-8ab6-54dbbceba017'; 
+                const DOUBAO_API_URL = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
+        
+                // 优化提示词函数
+                async function optimizePrompt() {
+                    // 获取输入值
+                    const original = originalPrompt.value.trim();
+                    const goal = dimensionGoal.value.trim();
+                    const audience = dimensionAudience.value.trim();
+                    const context = dimensionContext.value.trim();
+                    const constraints = dimensionConstraints.value.trim();
+                    
+                    // 验证输入
+                    if (!original && !goal && !audience && !context && !constraints) {
+                        optimizedPrompt.innerHTML = `<p class="text-neutral-500 italic">请填写原始提示词和至少一个维度的信息，以生成优化后的提示词。</p>`;
+                        return;
+                    }
+                    
+                    try {
+                        // 显示加载状态
+                                optimizedPrompt.innerHTML = `
+                                    <div class="flex flex-col items-center justify-center h-full space-y-4">
+                                        <div class="relative">
+                                            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                                            <i class="fa-solid fa-magic text-primary text-xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>
+                                        </div>
+                                        <p class="text-neutral-600 text-center">
+                                            <span class="loading-text font-medium">正在优化中</span><br>
+                                            <span class="text-sm">这可能需要几秒钟时间，请稍候...</span>
+                                        </p>
+                                    </div>
+                                `;
+                        
+                        // 构建提示词
+                        let prompt = '请根据以下信息并且依据最新的课程标准与核心素养生成更精准的AI提示词，要求直接给出AI提示词\n\n';
+                        if (goal) prompt += `目标：${goal}\n`;
+                        if (audience) prompt += `受众：${audience}\n`;
+                        if (context) prompt += `场景：${context}\n`;
+                        if (original) prompt += `原始提示词：${original}\n`;
+                        if (constraints) prompt += `约束：${constraints}\n`;
+                        
+                        // 调用豆包API
+                        const response = await fetch(DOUBAO_API_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${DOUBAO_API_KEY}`
+                            },
+                            body: JSON.stringify({
+                                model: "ep-20250518230104-mt6xx", // 使用适合的模型
+                                messages: [
+                                    {
+                                        role: "user",
+                                        content: prompt
+                                    }
+                                ],
+                                temperature: 0.7,
+                                max_tokens: 1000
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // 处理API响应
+                        if (data.choices && data.choices[0].message.content) {
+                            // 显示优化后的提示词
+                            optimizedPrompt.innerHTML = `<p>${data.choices[0].message.content}</p>`;
+                            
+                            // 添加淡入动画
+                            optimizedPrompt.style.opacity = '0';
+                            setTimeout(() => {
+                                optimizedPrompt.style.opacity = '1';
+                                optimizedPrompt.style.transition = 'opacity 0.3s ease';
+                            }, 50);
+                        } else {
+                            throw new Error('API返回格式不正确');
+                        }
+                    } catch (error) {
+                        console.error('优化提示词时出错:', error);
+                        optimizedPrompt.innerHTML = `<p class="text-red-500">发生错误: ${error.message}</p>`;
+                    }
+                }
+                
+                // 复制到剪贴板
+                        function copyToClipboard() {
+                            const text = optimizedPrompt.textContent.trim();
+                            
+                            if (text && text !== '优化后的提示词将显示在这里...' && text !== '请填写原始提示词和至少一个维度的信息，以生成优化后的提示词。') {
+                                navigator.clipboard.writeText(text).then(() => {
+                                    // 显示成功提示
+                                    successToast.classList.remove('translate-y-20', 'opacity-0');
+                                    successToast.classList.add('translate-y-0', 'opacity-100');
+                                    
+                                    // 3秒后隐藏提示
+                                    setTimeout(() => {
+                                        successToast.classList.add('translate-y-20', 'opacity-0');
+                                        successToast.classList.remove('translate-y-0', 'opacity-100');
+                                    }, 3000);
+                                }).catch(err => {
+                                    console.error('复制失败: ', err);
+                                });
+                            }
+                        }
+                
+                // 添加事件监听器
+                optimizeBtn.addEventListener('click', optimizePrompt);
+                copyBtn.addEventListener('click', copyToClipboard);
+                regenerateBtn.addEvent
+        
+        
+		       // 为输入框添加焦点效果
+               const textareas = document.querySelectorAll('textarea');
+               textareas.forEach(textarea => {
+               textarea.addEventListener('focus', () => {
+               textarea.parentElement.classList.add('scale-[1.01]');
+               textarea.parentElement.style.transition = 'transform 0.2s ease';
+               });
+            
+            textarea.addEventListener('blur', () => {
+                textarea.parentElement.classList.remove('scale-[1.01]');
+            });
+        });
+        
+        // 为按钮添加悬停效果
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                button.classList.add('scale-[1.02]');
+                button.style.transition = 'transform 0.2s ease';
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-[1.02]');
+            });
+        });
+    </script>
+</body>
+</html>
+    
